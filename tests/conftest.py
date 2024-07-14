@@ -12,7 +12,7 @@ from app.model.base import Base
 os.environ.setdefault("APP_ENV", "test")
 
 try:
-    from app.main import application
+    from app.main import app
     from app.config.connection import db
 except ImportError:
     raise
@@ -38,7 +38,7 @@ async def setup_db():
 async def client(setup_db) -> AsyncClient:
     async with AsyncClient(
         base_url="http://test.miintto.com",
-        transport=ASGITransport(application),
+        transport=ASGITransport(app),
     ) as async_client:
         yield async_client
 
