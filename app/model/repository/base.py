@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from fastapi import Depends
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,8 +23,10 @@ class BaseRepository:
         await self._session.commit()
         return result.scalar_one()
 
-    async def find_by_id(self, pk: int):
+    async def find_by_id(self, pk: int, entities: Sequence = None):
+        if not entities:
+            entities = (self.model,)
         result = await self._session.execute(
-            select(self.model).where(self.model.id == pk)
+            select(*entities).where(self.model.id == pk)
         )
         return result.scalar_one_or_none()

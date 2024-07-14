@@ -25,15 +25,19 @@ class OrderService:
         self.product_item = product_item
         self.user = user
 
+    async def _reduce_item_quantity(self, product_id: int, item_map: dict):
+        async with self.product.find_by_id_for_update(product_id):
+            for item in await self.product_item.find_by_ids(item_map.keys()):
+                if item.item_quantity <= item.sold_quantity:
+                    raise HTTPException(status_code=400, detail="Out of stock")
+                item_map[item.pk]["price"] = item.price
+                item.sold_quantity += item_map[item.pk]["quantity"]
+
     async def _create_items(
         self, order: Order, items: list[OrderItemInfo]
     ) -> list[OrderItem]:
         item_map = {it.item_id: {"quantity": it.quantity} for it in items}
-        await self.product.find_by_id_for_update(order.product_id)
-        for item in await self.product_item.find_by_ids(item_map.keys()):
-            if item.item_quantity <= item.sold_quantity:
-                raise HTTPException(status_code=400, detail="Out of stock!")
-            item_map[item.pk]["price"] = item.price
+        await self._reduce_item_quantity(order.product_id, item_map)
 
         item_list = [
             {"order_id": order.id, "item_id": item_id, "price": data["price"]}
@@ -63,7 +67,7 @@ class OrderService:
     async def create_order(
         self, data: OrderInfo, credential: HTTPAuthorizationCredentials
     ) -> dict:
-        if not (product := await self.product.find_by_id(data.product_id)):
+        if not await self.product.find_by_id(data.product_id, entities=(1,)):
             raise HTTPException(status_code=400)
         elif not (user := await self.user.find_by_id(credential.payload.pk)):
             raise HTTPException(status_code=400)
@@ -72,7 +76,7 @@ class OrderService:
 
         order = await self.order.create(
             order_number=data.order_number,
-            product_id=product.id,
+            product_id=data.product_id,
             user_id=user.id,
         )
         items = await self._create_items(order, data.items)

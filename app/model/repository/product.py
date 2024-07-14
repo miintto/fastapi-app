@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
 from sqlalchemy import Row, func, select
@@ -32,8 +33,10 @@ class ProductRepository(BaseRepository):
         )
         return result.fetchall()
 
+    @asynccontextmanager
     async def find_by_id_for_update(self, pk: int) -> Product:
         result = await self._session.execute(
             select(Product).where(self.model.id == pk).with_for_update()
         )
-        return result.scalar_one_or_none()
+        yield result.scalar_one_or_none()
+        await self._session.commit()
