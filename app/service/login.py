@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from bcrypt import checkpw
 from fastapi import Depends, HTTPException
 
@@ -16,4 +18,7 @@ class LoginService:
             raise HTTPException(status_code=400)
         elif not checkpw(data.password.encode(), user.password.encode()):
             raise HTTPException(status_code=400)
+
+        user.last_login = datetime.now(timezone.utc)
+        await self.user.save()
         return user

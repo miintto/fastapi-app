@@ -24,6 +24,7 @@ class PostgresConnection:
                 bind=self.engine,
                 autocommit=False,
                 autoflush=False,
+                expire_on_commit=False,
             ),
             scopefunc=current_task,
         )

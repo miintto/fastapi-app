@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException
 
 from app.common.security.credential import HTTPAuthorizationCredentials
-from app.model.order import OrderItem, OrderStatus
+from app.model.order import Order, OrderItem, OrderStatus
 from app.model.repository.auth import AuthUserRepository
 from app.model.repository.order import OrderRepository
 from app.model.repository.order_item import OrderItemRepository
@@ -26,17 +26,19 @@ class OrderService:
         self.user = user
 
     async def _create_items(
-        self, order_id: int, items: list[OrderItemInfo]
+        self, order: Order, items: list[OrderItemInfo]
     ) -> list[OrderItem]:
         item_map = {it.item_id: {"quantity": it.quantity} for it in items}
+        await self.product.find_by_id_for_update(order.product_id)
         for item in await self.product_item.find_by_ids(item_map.keys()):
             if item.item_quantity <= item.sold_quantity:
                 raise HTTPException(status_code=400, detail="Out of stock!")
             item_map[item.pk]["price"] = item.price
 
         item_list = [
-            {"order_id": order_id, "item_id": item_id, "price": data["price"]}
+            {"order_id": order.id, "item_id": item_id, "price": data["price"]}
             for item_id, data in item_map.items()
+            for _ in range(data["quantity"])
         ]
         return await self.order_item.bulk(item_list)
 
@@ -51,9 +53,8 @@ class OrderService:
                 "confirmed_dtm",
                 "created_dtm",
             ],
-            # func={"status": lambda x: x.status.name},
         )
-        result["item"] = [
+        result["items"] = [
             item.serialize(fields=["pk", "item_id", "price"])
             for item in items
         ]
@@ -74,8 +75,9 @@ class OrderService:
             product_id=product.id,
             user_id=user.id,
         )
-        items = await self._create_items(order.id, data.items)
-        await self.order.update_status(order.id, status=OrderStatus.COMPLETED)
+        items = await self._create_items(order, data.items)
+        order.status = OrderStatus.COMPLETED
+        await self.order.save()
         return self._serialize(order, items)
 
     async def search_order(self, order_id: int) -> dict:

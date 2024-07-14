@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Row,  func, select
+from sqlalchemy import Row, func, select
 
 from app.model.product import Product, ProductItem
 from .base import BaseRepository
@@ -31,3 +31,9 @@ class ProductRepository(BaseRepository):
             .where(Product.is_displayed.is_(True))
         )
         return result.fetchall()
+
+    async def find_by_id_for_update(self, pk: int) -> Product:
+        result = await self._session.execute(
+            select(Product).where(self.model.id == pk).with_for_update()
+        )
+        return result.scalar_one_or_none()

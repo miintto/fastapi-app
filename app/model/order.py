@@ -25,7 +25,9 @@ class Order(BaseModel):
     __tablename__ = "tb_order"
 
     id = Column(BigInteger, primary_key=True)
-    order_number = Column(String(100), comment="주문 번호", nullable=False, unique=True)
+    order_number = Column(
+        String(100), comment="주문 번호", nullable=False, unique=True
+    )
     product_id = Column(
         BigInteger, ForeignKey("tb_product.id", ondelete="CASCADE")
     )
@@ -47,9 +49,6 @@ class Order(BaseModel):
     created_dtm = Column(
         DateTime(timezone=True), nullable=False, default=datetime.utcnow
     )
-    updated_dtm = Column(
-        DateTime(timezone=True), nullable=False, default=datetime.utcnow
-    )
     items: Mapped[list["OrderItem"]] = relationship(back_populates="order")
 
 
@@ -57,7 +56,9 @@ class OrderItem(BaseModel):
     __tablename__ = "tb_order_item"
 
     id = Column(BigInteger, primary_key=True)
-    order_id = Column(BigInteger, ForeignKey("tb_order.id", ondelete="CASCADE"))
+    order_id = Column(
+        BigInteger, ForeignKey("tb_order.id", ondelete="CASCADE")
+    )
     item_id = Column(
         BigInteger, ForeignKey("tb_product_item.id", ondelete="CASCADE")
     )
