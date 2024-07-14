@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
-from fastapi.responses import JSONResponse
 
-from app.config.security.jwt import JWTProvider
+from app.common.response import JSONResponse
+from app.common.security.jwt import JWTProvider
 from app.schemas.auth import LoginInfo, RegisterInfo
 from app.service.login import LoginService
 from app.service.register import RegisterService
@@ -16,7 +16,7 @@ async def register(
     jwt: JWTProvider = Depends(JWTProvider),
 ) -> JSONResponse:
     user = await service.register(body)
-    return JSONResponse(content=jwt.encode(user), status_code=200)
+    return JSONResponse(content={"token": jwt.encode(user)}, status_code=200)
 
 
 @router.post("/login", summary="로그인")
@@ -26,4 +26,4 @@ async def login(
     jwt: JWTProvider = Depends(JWTProvider),
 ) -> JSONResponse:
     user = await service.login(body)
-    return JSONResponse(content=jwt.encode(user), status_code=200)
+    return JSONResponse(content={"token": jwt.encode(user)}, status_code=200)

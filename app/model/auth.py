@@ -14,10 +14,13 @@ from .base import BaseModel
 
 
 class UserPermission(enum.Enum):
-    ANONYMOUS = ("ANONYMOUS", "비회원")
-    NORMAL = ("NORMAL", "일반 회원")
-    ADMIN = ("ADMIN", "관리자")
-    MASTER = ("MASTER", "마스터")
+    ANONYMOUS = "ANONYMOUS"  # 비회원
+    NORMAL = "NORMAL"  # 일반 회원
+    ADMIN = "ADMIN"  # 관리자
+    MASTER = "MASTER"  # 마스터
+
+    def is_authenticated(self):
+        return self in (self.NORMAL, self.ADMIN, self.MASTER)
 
 
 class AuthUser(BaseModel):

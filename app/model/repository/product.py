@@ -1,11 +1,14 @@
 from datetime import datetime, timezone
-from sqlalchemy import Row, ScalarResult, func, select
+
+from sqlalchemy import Row,  func, select
 
 from app.model.product import Product, ProductItem
 from .base import BaseRepository
 
 
 class ProductRepository(BaseRepository):
+    model = Product
+
     async def find_displayed_products(self) -> list[Row[tuple[Product, int]]]:
         result = await self._session.execute(
             select(
@@ -28,21 +31,3 @@ class ProductRepository(BaseRepository):
             .where(Product.is_displayed.is_(True))
         )
         return result.fetchall()
-
-    async def find_product(self, pk: int) -> Product | None:
-        result = await self._session.execute(
-            select(Product).where(Product.id == pk)
-        )
-        return result.scalar_one_or_none()
-
-    async def find_product_items_by_product(
-        self, product_id: int
-    ) -> ScalarResult[ProductItem]:
-        result = await self._session.execute(
-            select(ProductItem)
-            .where(
-                ProductItem.product_id == product_id,
-                ProductItem.is_active.is_(True),
-            )
-        )
-        return result.scalars()

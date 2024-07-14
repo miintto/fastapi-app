@@ -1,7 +1,7 @@
 from bcrypt import gensalt, hashpw
 from fastapi import Depends, HTTPException
 
-from app.model.auth import AuthUser
+from app.model.auth import AuthUser, UserPermission
 from app.model.repository.auth import AuthUserRepository
 from app.schemas.auth import RegisterInfo
 
@@ -17,6 +17,8 @@ class RegisterService:
             raise HTTPException(status_code=400)
 
         hashed_pw = hashpw(password=data.password.encode(), salt=gensalt())
-        return await self.user.create_user(
-            email=data.email, password=hashed_pw.decode()
+        return await self.user.create(
+            email=data.email,
+            password=hashed_pw.decode(),
+            permission=UserPermission.NORMAL,
         )

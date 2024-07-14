@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
-from fastapi.responses import JSONResponse
 
+from app.common.response import JSONResponse
 from app.service.product import ProductService
 
 router = APIRouter(prefix="/products", tags=["Product"])

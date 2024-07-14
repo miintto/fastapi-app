@@ -15,10 +15,10 @@ from .base import BaseModel
 
 
 class OrderStatus(enum.Enum):
-    PENDING = ("PENDING", "주문 대기")
-    COMPLETED = ("COMPLETED", "주문 완료")
-    CONFIRMED = ("CONFIRMED", "주문 확정")
-    CANCELLED = ("CANCELLED", "주문 취소")
+    PENDING = "PENDING"  # 주문 대기
+    COMPLETED = "COMPLETED"  # 주문 완료
+    CONFIRMED = "CONFIRMED"  # 주문 확정
+    CANCELLED = "CANCELLED"  # 주문 취소
 
 
 class Order(BaseModel):
@@ -45,9 +45,11 @@ class Order(BaseModel):
         DateTime(timezone=True), comment="주문 확정 일시", nullable=True
     )
     created_dtm = Column(
-        DateTime, nullable=False, default=datetime.utcnow
+        DateTime(timezone=True), nullable=False, default=datetime.utcnow
     )
-    updated_dtm = Column(DateTime, nullable=True)
+    updated_dtm = Column(
+        DateTime(timezone=True), nullable=False, default=datetime.utcnow
+    )
     items: Mapped[list["OrderItem"]] = relationship(back_populates="order")
 
 

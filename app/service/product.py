@@ -2,13 +2,17 @@ from fastapi import Depends, HTTPException
 
 from app.model.product import ProductItem
 from app.model.repository.product import ProductRepository
+from app.model.repository.product_item import ProductItemRepository
 
 
 class ProductService:
     def __init__(
-        self, product: ProductRepository = Depends(ProductRepository)
+        self,
+        product: ProductRepository = Depends(ProductRepository),
+        product_item: ProductItemRepository = Depends(ProductItemRepository),
     ):
         self.product = product
+        self.product_item = product_item
 
     def _calc_discount(self, item: ProductItem):
         try:
@@ -28,9 +32,9 @@ class ProductService:
         ]
 
     async def get_product(self, product_id: int):
-        if not (product := await self.product.find_product(product_id)):
+        if not (product := await self.product.find_by_id(product_id)):
             raise HTTPException(status_code=404)
-        items = await self.product.find_product_items_by_product(product_id)
+        items = await self.product_item.find_by_product_id(product_id)
         result = product.serialize(fields=["pk", "name"])
         result["items"] = [
             item.serialize(
